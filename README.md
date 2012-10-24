@@ -1,4 +1,4 @@
-# Accessor_MySQL 0.1.0
+# Accessor_SQLite 0.1.0
 
 A MySQL database wrapper, provide easy access to database without writing SQL code
 
