@@ -1,4 +1,4 @@
-# Accessor_MySQL 0.3.1
+# Accessor_MySQL 0.1.0
 
 A MySQL database wrapper, provide easy access to database without writing SQL code
 
@@ -7,21 +7,13 @@ A MySQL database wrapper, provide easy access to database without writing SQL co
 
 1. Install through npm, following command will do that:
 
-		npm install Accessor_MySQL
+		npm install Accessor_SQLite
 		
 2. Create a config directory under your application, and create a database.js under that, which may contain like:
 
-		var databaseConfig = { 
-    		user: "YOUR_DATABASE_USER",
-		    password: "YOUR_DATABASE_PASSWORD",
-	    	database: "TARGET_DATABASE",
-	    	host: "localhost",
-    		port: 3306
-		};
+		exports.db_path = "path to database";
 
-		module.exports = databaseConfig;
-
-3. Now, Accessor_MySQL is ready to use.
+3. Now, Accessor_SQLite is ready to use.
 
 
 ## Usage
@@ -32,7 +24,7 @@ A MySQL database wrapper, provide easy access to database without writing SQL co
 
 2. Place constructor where you need the Accessor. Do not forget to specify your database engine.
 
-		var tester = Accessor("YOUR_TARGET_TABLE", "MySQL");
+		var tester = Accessor("YOUR_TARGET_TABLE", "SQLite");
 
 3. After initialization, Accessor will try to obtain the schema, and store it to verify  column existence while updating or creating.
 
