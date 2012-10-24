@@ -1,0 +1,21 @@
+{
+  "name": "Accessor_SQLite",
+  "version": "0.1.0",
+  "description": "A simple wraper for developer to access their SQLite database without writing SQL code",
+  "main": "index.js",
+  "dependencies": {
+    "sqlite3": "~2.1.5"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bu/Accessor_SQLite.git"
+  },
+  "keywords": [
+    "sqlite",
+    "observer",
+    "notify"
+  ],
+  "author": "Buwei Chiu <bu@hax4.in>",
+  "license": "MIT"
+}
