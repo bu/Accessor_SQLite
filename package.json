@@ -1,5 +1,5 @@
 {
-  "name": "Accessor_SQLite",
+  "name": "accessor_sqlite",
   "version": "0.1.0",
   "description": "A simple wraper for developer to access their SQLite database without writing SQL code",
   "main": "index.js",
