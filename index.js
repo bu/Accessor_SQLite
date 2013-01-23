@@ -12,6 +12,8 @@ var config = require( path.join(__dirname, "..", "..", "config", "database") );
 var GenericObject = function(table_name) {
 	var self = this;
 
+	self._db = new sqlite3.Database(config.db_path);
+
 	self._table_name = table_name;
 	self._fields = []; 
 	self._observer = {};
@@ -296,62 +298,58 @@ GenericObject.prototype._fieldValueBuilder = function(dataObject) {
 GenericObject.prototype._query = function(sql, callback) {
 	var self = this;
 
-	var db = new sqlite3.Database(config.db_path);
-
-	if(db === null) {
+	if(self._db === null) {
 		return callback(new Error("No database connection."));
 	}
-
-	db.all(sql, function(err, data) {
-		if(err) {
-			log("ERROR: Database select error, detail: " + err + ", queried: " + sql);
-			process.nextTick(function() { callback(err); });
-			return;
-		}
-		
-		if(typeof fields === "undefined") {
-			process.nextTick(function() { db.close(); callback( null, data ) ; });
-		} else {
-			process.nextTick(function() { db.close(); callback( null, data, self._keys(fields) ) ; });
-		}
+	
+	self._db.parallelize(function() {
+		self._db.all(sql, function(err, data) {
+			if(err) {
+				log("ERROR: Database select error, detail: " + err + ", queried: " + sql);
+				process.nextTick(function() { callback(err); });
+				return;
+			}
+			
+			if(typeof fields === "undefined") {
+				process.nextTick(function() { callback( null, data ) ; });
+			} else {
+				process.nextTick(function() { callback( null, data, self._keys(fields) ) ; });
+			}
+		});
 	});
 };
 
 GenericObject.prototype._queryEach = function(sql, callback, complete) {
 	var self = this;
 
-	var db = new sqlite3.Database(config.db_path);
 
-	if(db === null) {
+	if(self._db === null) {
 		return callback(new Error("No database connection."));
 	}
 
-	db.each(sql, function(err, row) {
+	self._db.parallelize(function() {
+		self._db.each(sql, function(err, row) {
+			if(err) {
+				log("ERROR: Database query error, detail: " + err + ", queried: " + sql);
 
-		if(err) {
-			log("ERROR: Database query error, detail: " + err + ", queried: " + sql);
+				return process.nextTick(function() {
+					callback(err); 
+				});
+			}
 
-			return process.nextTick(function() {
-				callback(err); 
-			});
-		}
+			return callback(null, row);
+		}, function(err, rows) {
+			if(err) {
+				log("ERROR: Database query error, detail: " + err + ", queried: " + sql);
 
-		return callback(null, row);
-
-	}, function(err, rows) {
-
-		if(err) {
-			log("ERROR: Database query error, detail: " + err + ", queried: " + sql);
-
-			return process.nextTick(function() { 
-				callback(err); 
-			});
-		}
+				return process.nextTick(function() { 
+					callback(err); 
+				});
+			}
 		
-		return process.nextTick(function() {
-			db.close();
-
-			return complete(null, rows); 
+			return process.nextTick(function() {
+				return complete(null, rows); 
+			});
 		});
 	});
 };
