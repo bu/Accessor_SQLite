@@ -86,8 +86,13 @@ GenericObject.prototype.notify = function(event) {
 //
 // CRUD action
 //
-GenericObject.prototype.create = function(dataObject, callback) {
+GenericObject.prototype.create = function(dataObject, options, callback) {
 	var self = this;
+
+    if(typeof options === "function") {
+        callback = options;
+        options = {};
+    }
 
 	// sql building
 	var data_columns = [],
@@ -99,7 +104,7 @@ GenericObject.prototype.create = function(dataObject, callback) {
 		}
 
 		if( self._fields.indexOf(column) === -1 ) {
-			log( "Warning: " + key + " is not in database schema, and is not inserted into queryset.");
+			log( "Warning: " + column + " is not in database schema, and is not inserted into queryset.");
 			continue;
 		}
 
@@ -113,6 +118,10 @@ GenericObject.prototype.create = function(dataObject, callback) {
 	}
 
 	var sql = "INSERT INTO " + self._table_name + " (" + data_columns.join(",") + ") VALUES (" + column_data.join(",") + ");";
+
+    if(options.noExecute) {
+        return sql;
+    }
 
 	// sql executing
 	self._query(sql, function(err, info) {
@@ -294,9 +303,38 @@ GenericObject.prototype._fieldValueBuilder = function(dataObject) {
 	return field_list.join(",");
 };
 
+GenericObject.prototype._exec = function(sql, callback) {
+    var self = this;
+
+    log(sql);
+
+    if(self._db === null) {
+		return callback(new Error("No database connection."));
+	}
+	
+	self._db.parallelize(function() {
+		self._db.exec(sql, function(err, data) {
+			if(err) {
+				log("ERROR: Database select error, detail: " + err + ", queried: " + sql);
+				process.nextTick(function() { callback(err); });
+				return;
+			}
+			
+			if(typeof fields === "undefined") {
+				process.nextTick(function() { callback( null, data ) ; });
+			} else {
+				process.nextTick(function() { callback( null, data, self._keys(fields) ) ; });
+			}
+		});
+	});
+
+};
+
 
 GenericObject.prototype._query = function(sql, callback) {
 	var self = this;
+
+	log(sql);
 
 	if(self._db === null) {
 		return callback(new Error("No database connection."));
@@ -322,6 +360,7 @@ GenericObject.prototype._query = function(sql, callback) {
 GenericObject.prototype._queryEach = function(sql, callback, complete) {
 	var self = this;
 
+	log(sql);
 
 	if(self._db === null) {
 		return callback(new Error("No database connection."));
